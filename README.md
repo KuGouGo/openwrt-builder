@@ -47,6 +47,24 @@ openwrt-<version>-x86-64-generic-squashfs-combined-efi.img.gz
 
 ---
 
+## Build Flow
+
+```txt
+Official OpenWrt Release
+          ↓
+ Official ImageBuilder
+          ↓
+   Local package list
+          ↓
+   System overlay files
+          ↓
+      Final image
+          ↓
+   GitHub Releases
+```
+
+---
+
 ## Features
 
 - 基于 **官方 OpenWrt 最新 release** 自动构建
@@ -176,6 +194,7 @@ files/etc/config/system
 - `ntp.aliyun.com`
 - `ntp1.aliyun.com`
 - `ntp.tencent.com`
+- `cn.pool.ntp.org`
 
 ---
 
