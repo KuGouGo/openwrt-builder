@@ -21,7 +21,7 @@ jobs:
       ROOTFS_PARTSIZE: 800
       KERNEL_PARTSIZE: 64
       MIRROR_BASE: https://mirrors.tuna.tsinghua.edu.cn/openwrt
-      PACKAGES_FILE: config/packages.txt
+      PACKAGES_FILE: cfg/pkgs.txt
 
     steps:
       - name: Checkout
@@ -87,8 +87,8 @@ EOF
         shell: bash
         run: |
           set -euo pipefail
-          if [ -x scripts/diy.sh ]; then
-            scripts/diy.sh imagebuilder '${{ steps.release.outputs.version }}'
+          if [ -x scripts/customize.sh ]; then
+            scripts/customize.sh imagebuilder '${{ steps.release.outputs.version }}'
           fi
 
       - name: Build firmware

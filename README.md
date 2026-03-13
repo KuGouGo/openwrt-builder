@@ -5,7 +5,7 @@
 - `.github/workflows/build-openwrt.yml`
 - `files/etc/config/system`
 - `files/etc/apk/repositories.d/.gitkeep`
-- `scripts/diy.sh`
+- `scripts/customize.sh`
 
 ## 功能
 
