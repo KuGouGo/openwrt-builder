@@ -2,10 +2,10 @@
 
 已生成内容：
 
-- `.github/workflows/build-openwrt.yml`
+- `.github/workflows/build.yml`
 - `files/etc/config/system`
 - `files/etc/apk/repositories.d/.gitkeep`
-- `scripts/customize.sh`
+- `scripts/tune.sh`
 
 ## 功能
 

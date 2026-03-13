@@ -87,8 +87,8 @@ EOF
         shell: bash
         run: |
           set -euo pipefail
-          if [ -x scripts/customize.sh ]; then
-            scripts/customize.sh imagebuilder '${{ steps.release.outputs.version }}'
+          if [ -x scripts/tune.sh ]; then
+            scripts/tune.sh imagebuilder '${{ steps.release.outputs.version }}'
           fi
 
       - name: Build firmware
