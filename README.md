@@ -290,6 +290,21 @@ files/etc/defaults/10-model
 
 ---
 
+## Download
+
+构建完成后，直接去仓库的 **Releases** 页面下载最终镜像：  
+<https://github.com/KuGouGo/openwrt-builder/releases>
+
+通常你只需要找这个文件：
+
+```txt
+openwrt-<version>-x86-64-generic-squashfs-combined-efi.img.gz
+```
+
+如果 Release 页面里只有一个镜像文件，那基本就是它，不用再在一堆附件里翻来翻去。
+
+---
+
 ## Quick Start
 
 如果你只想快速用起来：
