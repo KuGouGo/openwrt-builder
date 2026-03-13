@@ -21,13 +21,7 @@ jobs:
       ROOTFS_PARTSIZE: 800
       KERNEL_PARTSIZE: 64
       MIRROR_BASE: https://mirrors.tuna.tsinghua.edu.cn/openwrt
-      PACKAGES: >-
-        apk-openssl bash block-mount curl dnsmasq-full ethtool htop ip-full jq
-        kmod-nft-queue kmod-sched-core kmod-tcp-bbr kmod-tun libustream-openssl
-        lsblk luci luci-app-firewall luci-app-package-manager luci-i18n-base-zh-cn
-        luci-i18n-firewall-zh-cn luci-i18n-package-manager-zh-cn luci-mod-rpc nano
-        nftables-json openssh-sftp-server owut pciutils sing-box usbutils wget-ssl
-        zoneinfo-asia -apk-mbedtls -dnsmasq -libustream-mbedtls -nftables
+      PACKAGES_FILE: config/packages.txt
 
     steps:
       - name: Checkout
@@ -101,6 +95,8 @@ EOF
         shell: bash
         run: |
           set -euo pipefail
+          PACKAGES="$(grep -vE '^\s*($|#)' "${GITHUB_WORKSPACE}/${PACKAGES_FILE}" | tr '\n' ' ' | xargs)"
+          echo "Packages: $PACKAGES"
           cd imagebuilder
           make image \
             PROFILE="${OPENWRT_PROFILE}" \
