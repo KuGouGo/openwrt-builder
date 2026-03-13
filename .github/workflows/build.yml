@@ -119,23 +119,8 @@ jobs:
           set -euo pipefail
           tag="${{ steps.rel.outputs.tag }}"
           ver="${{ steps.rel.outputs.ver }}"
-          title="OpenWrt ${ver} · x86_64 Release Build"
-          notes=$"## OpenWrt Builder
-
-Official OpenWrt x86_64 release image, rebuilt with a clean release-based workflow.
-
-### Build Profile
-- Version: ${ver}
-- Target: x86/64 generic
-- Format: squashfs combined-efi.img.gz
-- Timezone: Asia/Shanghai
-- Mirror: Tsinghua Tuna
-- Rootfs partsize: 600 MB
-- Kernel partsize: 32 MB
-
-### Download
-Use the attached image file below.
-"
+          title="OpenWrt ${ver} · x86_64 EFI Image"
+          notes=$"Official OpenWrt ${ver} x86_64 image.\n\nDownload the attached image file below."
           if gh release view "$tag" >/dev/null 2>&1; then
             gh release upload "$tag" "${{ steps.pick.outputs.path }}" --clobber
           else
