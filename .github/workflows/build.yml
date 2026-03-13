@@ -18,8 +18,8 @@ jobs:
       OPENWRT_SUBTARGET: 64
       OPENWRT_PROFILE: generic
       TZ_NAME: Asia/Shanghai
-      ROOTFS_PARTSIZE: 800
-      KERNEL_PARTSIZE: 64
+      ROOTFS_PARTSIZE: 600
+      KERNEL_PARTSIZE: 32
       MIRROR_BASE: https://mirrors.tuna.tsinghua.edu.cn/openwrt
       PACKAGES_FILE: cfg/pkgs.txt
 

@@ -13,8 +13,8 @@
 - x86_64 / generic
 - 默认中国镜像源（清华 Tuna）
 - 时区：Asia/Shanghai
-- ROOTFS_PARTSIZE=800
-- KERNEL_PARTSIZE=64
+- ROOTFS_PARTSIZE=600
+- KERNEL_PARTSIZE=32
 - 保留 sing-box
 - 使用 ImageBuilder 快速构建
 
