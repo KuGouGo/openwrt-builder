@@ -1,9 +1,35 @@
 # openwrt-builder
 
+[![Build](https://img.shields.io/github/actions/workflow/status/KuGouGo/openwrt-builder/build.yml?branch=main&label=build)](https://github.com/KuGouGo/openwrt-builder/actions/workflows/build.yml)
+[![Release](https://img.shields.io/github/v/release/KuGouGo/openwrt-builder?display_name=tag&label=release)](https://github.com/KuGouGo/openwrt-builder/releases)
+[![Upstream](https://img.shields.io/badge/upstream-OpenWrt-00b5e2)](https://github.com/openwrt/openwrt)
+[![Target](https://img.shields.io/badge/target-x86%2F64-generic)](https://openwrt.org/)
+
 > Build a clean, release-based OpenWrt x86_64 image with a small set of practical customizations.
 
 一个面向日常使用的 **官方 OpenWrt x86_64 自动构建仓库**。  
 目标不是做一套大而全的魔改系统，而是基于**官方正式发行版**，稳定地产出一个顺手、干净、命名规范的镜像。
+
+---
+
+## Preview
+
+这套仓库最终只关心一个结果：
+
+```txt
+openwrt-<version>-x86-64-generic-squashfs-combined-efi.img.gz
+```
+
+也就是一个能直接下载、直接用、命名尽量贴近官方的最终镜像。
+
+如果你只想要：
+
+- 官方 release 底子
+- 国内可用的软件源
+- 自己常用的软件包
+- 干净一点的发布页面
+
+那这里基本就是一把到位。
 
 ---
 
@@ -17,14 +43,7 @@
 - **只做少量定制**，降低维护成本
 - **只手动触发构建**，避免无意义消耗 Actions 配额
 
-如果你想要的是：
-
-- 尽量保留官方风格
-- 带上自己常用的软件包
-- 默认时区和源更适合国内环境
-- 构建结果能直接放到 Release 页面下载
-
-那么这个仓库就是为这种场景准备的。
+它更像一个“**官方发行版再打包工作流**”，而不是一套重型、满地补丁的自定义固件工程。
 
 ---
 
@@ -35,8 +54,8 @@
 - 固件产物统一发布到 **GitHub Releases**
 - 默认使用 **清华 Tuna** 镜像源
 - 默认时区为 **Asia/Shanghai**
-- 固件命名风格尽量贴近官方
-- 仅保留最终目标镜像，不上传杂项文件
+- 文件命名风格尽量贴近官方
+- 仅保留最终 EFI 镜像，不上传杂项文件
 
 ---
 
@@ -83,7 +102,7 @@ files/etc/defaults/10-model   x86 型号名修正脚本
 scripts/tune.sh               自定义调整入口
 ```
 
-### 最常修改的文件
+### Most edited files
 
 日常维护时，通常只需要关心下面三个：
 
@@ -106,8 +125,6 @@ scripts/tune.sh               自定义调整入口
 7. 发布到当前仓库的 **GitHub Releases**
 
 整个流程偏向“**官方发行版再打包**”，而不是“完整源码编译自定义发行版”。
-
-这也是它更适合长期维护的原因之一。
 
 ---
 
@@ -137,8 +154,6 @@ dnsmasq-full
 
 - 添加 `dnsmasq-full`
 - 移除默认 `dnsmasq`
-
-这种写法适合保持包列表清晰，也方便长期维护。
 
 ---
 
@@ -189,7 +204,7 @@ MIRROR_BASE
 Default string
 ```
 
-为了让页面看起来更正常，仓库里加了一个很小的修正：
+这里加了一点很小但很有用的修正：
 
 - 如果检测到设备型号是 `Default string`
 - 就把展示名改成 `OpenWrt Router`
@@ -199,8 +214,6 @@ Default string
 ```txt
 files/etc/defaults/10-model
 ```
-
-这个改动不大，但对观感很有用。
 
 ---
 
@@ -220,8 +233,6 @@ files/etc/defaults/10-model
 - 不会定时跑
 - 不会在你提交配置时偷偷开始编译
 
-这能让构建行为保持可控，也更节省 GitHub Actions 资源。
-
 ---
 
 ## Release Behavior
@@ -240,13 +251,11 @@ files/etc/defaults/10-model
 - `json`
 - 其他不需要的镜像格式
 
-如果目标很明确，这种发布方式会更干净。
-
 ---
 
 ## Why ImageBuilder
 
-这个仓库选择 ImageBuilder，而不是完整源码编译，主要是因为目标非常明确：
+这个仓库选择 ImageBuilder，而不是完整源码编译，原因很现实：
 
 - 使用官方发行版
 - 增删少量软件包
@@ -260,14 +269,18 @@ files/etc/defaults/10-model
 - 更稳定
 - 更容易维护
 
-如果以后要做的是：
+---
 
-- 深度补丁
-- 跨发行版移植包
-- 修改 target 逻辑
-- 大量底层裁剪
+## Quick Start
 
-那再切到完整源码编译会更合适。
+如果你只想快速用起来：
+
+1. 修改 `cfg/pkgs.txt`
+2. 按需调整 `files/etc/config/system`
+3. 进入 **Actions** 手动运行 `build`
+4. 去 **Releases** 下载最终镜像
+
+就这么简单。
 
 ---
 
@@ -293,24 +306,8 @@ files/etc/defaults/10-model
 
 ---
 
-## Quick Start
+## Upstream
 
-如果你只是想快速用起来：
-
-1. 修改 `cfg/pkgs.txt`
-2. 按需调整 `files/etc/config/system`
-3. 进入 **Actions** 手动运行 `build`
-4. 去 **Releases** 下载最终镜像
-
-就这么简单。
-
----
-
-## License / Upstream
-
-本仓库基于：
-
-- 官方 OpenWrt release
-- 官方 OpenWrt ImageBuilder
-
-如果你在这个仓库基础上继续扩展，建议尽量保持对上游结构和命名风格的尊重，这样后续维护会轻松很多。
+- [OpenWrt](https://github.com/openwrt/openwrt)
+- [OpenWrt Official Website](https://openwrt.org/)
+- [GitHub Releases](https://github.com/KuGouGo/openwrt-builder/releases)
