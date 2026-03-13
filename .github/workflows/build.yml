@@ -119,8 +119,23 @@ jobs:
           set -euo pipefail
           tag="${{ steps.rel.outputs.tag }}"
           ver="${{ steps.rel.outputs.ver }}"
-          title="OpenWrt ${ver} x86_64 build"
-          notes=$'Based on official OpenWrt release.\n\n- Target: x86/64 generic\n- Format: squashfs combined-efi.img.gz\n- Timezone: Asia/Shanghai\n- Mirror: Tsinghua Tuna\n- Rootfs partsize: 600 MB\n- Kernel partsize: 32 MB'
+          title="OpenWrt ${ver} · x86_64 Release Build"
+          notes=$"## OpenWrt Builder
+
+Official OpenWrt x86_64 release image, rebuilt with a clean release-based workflow.
+
+### Build Profile
+- Version: ${ver}
+- Target: x86/64 generic
+- Format: squashfs combined-efi.img.gz
+- Timezone: Asia/Shanghai
+- Mirror: Tsinghua Tuna
+- Rootfs partsize: 600 MB
+- Kernel partsize: 32 MB
+
+### Download
+Use the attached image file below.
+"
           if gh release view "$tag" >/dev/null 2>&1; then
             gh release upload "$tag" "${{ steps.pick.outputs.path }}" --clobber
           else
