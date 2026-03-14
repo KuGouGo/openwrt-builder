@@ -21,7 +21,6 @@ jobs:
       ROOTFS_PARTSIZE: 600
       KERNEL_PARTSIZE: 32
       MIRROR_BASE: https://mirrors.tuna.tsinghua.edu.cn/openwrt
-      NIKKI_FEED_BASE: https://nikkinikki.pages.dev
       PACKAGES_FILE: cfg/pkgs.txt
 
     steps:
@@ -108,9 +107,6 @@ jobs:
             "${MIRROR_BASE}/releases/${ver}/packages/x86_64/routing" \
             "${MIRROR_BASE}/releases/${ver}/packages/x86_64/telephony" \
             > imagebuilder/files/etc/apk/repositories.d/distfeeds.list
-          printf '%s\n' \
-            "${NIKKI_FEED_BASE}/openwrt-${ver%.*}/x86_64/nikki/packages.adb" \
-            >> imagebuilder/files/etc/apk/repositories.d/customfeeds.list
           if [ -x scripts/tune.sh ]; then
             scripts/tune.sh imagebuilder "$ver"
           fi
