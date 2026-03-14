@@ -70,6 +70,8 @@ jobs:
         run: |
           set -euo pipefail
           ./scripts/fetch-nikki-release.sh "${{ steps.rel.outputs.ver }}"
+          echo "--- files/tmp/nikki-feed ---"
+          find files/tmp/nikki-feed -maxdepth 2 -type f | sort || true
 
       - name: Download imagebuilder
         shell: bash
@@ -95,6 +97,8 @@ jobs:
           if [ -d files/tmp/nikki-feed ]; then
             find files/tmp/nikki-feed -maxdepth 1 -type f \( -name '*.apk' -o -name '*.ipk' -o -name 'packages.adb' -o -name 'index.json' \) -exec cp -f {} imagebuilder/packages/ \;
           fi
+          echo "--- imagebuilder/packages ---"
+          find imagebuilder/packages -maxdepth 1 -type f | sort || true
           ls -lah imagebuilder/packages || true
           mkdir -p imagebuilder/files/etc/apk/repositories.d
           printf '%s\n' \
