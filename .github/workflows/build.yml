@@ -2,27 +2,9 @@ name: build
 
 on:
   workflow_dispatch:
-    inputs:
-      openwrt_version:
-        description: OpenWrt version (leave blank for latest official release)
-        required: false
-        type: string
-      rootfs_partsize:
-        description: Override root filesystem partition size in MB
-        required: false
-        type: string
-      package_file:
-        description: Override package list file path
-        required: false
-        type: string
-      disable_signature_check:
-        description: Disable package signature check (only for custom/unsigned feeds)
-        required: false
-        default: false
-        type: boolean
 
 concurrency:
-  group: openwrt-build-${{ inputs.openwrt_version || 'latest' }}
+  group: openwrt-build
   cancel-in-progress: true
 
 jobs:
@@ -66,36 +48,21 @@ jobs:
           : "${BUILD_BASE:?missing BUILD_BASE}"
           : "${PACKAGES_FILE:?missing PACKAGES_FILE}"
 
-          req_ver="${{ inputs.openwrt_version }}"
-          if [ -n "$req_ver" ]; then
-            ver="${req_ver#v}"
-            tag="v${ver}"
-          else
-            json="$(curl --retry 3 --retry-all-errors --connect-timeout 15 --max-time 60 -fsSL https://api.github.com/repos/openwrt/openwrt/releases/latest)"
-            tag="$(printf '%s' "$json" | jq -r '.tag_name')"
-            ver="${tag#v}"
-            if [ -z "$tag" ] || [ "$tag" = "null" ]; then
-              echo "failed to get latest official release" >&2
-              exit 1
-            fi
-          fi
-
-          rootfs_partsize="${{ inputs.rootfs_partsize }}"
-          package_file="${{ inputs.package_file }}"
-          if [ -z "$rootfs_partsize" ]; then
-            rootfs_partsize="$ROOTFS_PARTSIZE"
-          fi
-          if [ -z "$package_file" ]; then
-            package_file="$PACKAGES_FILE"
-          fi
-
-          if ! [[ "$rootfs_partsize" =~ ^[0-9]+$ ]]; then
-            echo "rootfs_partsize must be an integer: $rootfs_partsize" >&2
+          if ! [[ "$ROOTFS_PARTSIZE" =~ ^[0-9]+$ ]]; then
+            echo "ROOTFS_PARTSIZE must be an integer: $ROOTFS_PARTSIZE" >&2
             exit 1
           fi
 
-          if [ ! -f "${GITHUB_WORKSPACE}/${package_file}" ]; then
-            echo "package file not found: ${package_file}" >&2
+          if [ ! -f "${GITHUB_WORKSPACE}/${PACKAGES_FILE}" ]; then
+            echo "package file not found: ${PACKAGES_FILE}" >&2
+            exit 1
+          fi
+
+          json="$(curl --retry 3 --retry-all-errors --connect-timeout 15 --max-time 60 -fsSL https://api.github.com/repos/openwrt/openwrt/releases/latest)"
+          tag="$(printf '%s' "$json" | jq -r '.tag_name')"
+          ver="${tag#v}"
+          if [ -z "$tag" ] || [ "$tag" = "null" ]; then
+            echo "failed to get latest official release" >&2
             exit 1
           fi
 
@@ -107,9 +74,8 @@ jobs:
           echo "fs=$OPENWRT_FS" >> "$GITHUB_OUTPUT"
           echo "image=$OPENWRT_IMAGE" >> "$GITHUB_OUTPUT"
           echo "build_base=$BUILD_BASE" >> "$GITHUB_OUTPUT"
-          echo "rootfs_partsize=$rootfs_partsize" >> "$GITHUB_OUTPUT"
-          echo "package_file=$package_file" >> "$GITHUB_OUTPUT"
-          echo "disable_signature_check=${{ inputs.disable_signature_check }}" >> "$GITHUB_OUTPUT"
+          echo "rootfs_partsize=$ROOTFS_PARTSIZE" >> "$GITHUB_OUTPUT"
+          echo "package_file=$PACKAGES_FILE" >> "$GITHUB_OUTPUT"
           echo "imagebuilder_file=openwrt-imagebuilder-${ver}-${OPENWRT_TARGET}-${OPENWRT_SUBTARGET}.Linux-x86_64.tar.zst" >> "$GITHUB_OUTPUT"
           echo "image_file=openwrt-${ver}-${OPENWRT_TARGET}-${OPENWRT_SUBTARGET}-${OPENWRT_PROFILE}-${OPENWRT_FS}-${OPENWRT_IMAGE}" >> "$GITHUB_OUTPUT"
           echo "target_dir=imagebuilder/bin/targets/${OPENWRT_TARGET}/${OPENWRT_SUBTARGET}" >> "$GITHUB_OUTPUT"
@@ -135,7 +101,6 @@ jobs:
           echo "Rootfs size            : ${{ steps.meta.outputs.rootfs_partsize }} MB"
           echo "Packages file          : ${{ steps.meta.outputs.package_file }}"
           echo "Unique package entries : $pkg_count"
-          echo "Signature check        : ${{ steps.meta.outputs.disable_signature_check == 'true' && 'disabled' || 'enabled' }}"
           echo "Build source           : ${{ steps.meta.outputs.build_base }}"
           echo "Output                 : ${{ steps.meta.outputs.image_file }}"
 
@@ -157,18 +122,6 @@ jobs:
           if [ -d files ]; then
             rsync -a files/ imagebuilder/files/
           fi
-
-      - name: Configure signature policy
-        if: ${{ inputs.disable_signature_check }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          cd imagebuilder
-          if [ ! -f repositories ]; then
-            echo "expected new ImageBuilder layout: missing repositories file" >&2
-            exit 1
-          fi
-          cp -f repositories repositories.orig
 
       - name: Build image
         shell: bash
@@ -207,10 +160,6 @@ jobs:
             make_args+=(PACKAGES="$pkgs")
           fi
 
-          if [ "${{ steps.meta.outputs.disable_signature_check }}" = "true" ]; then
-            make_args+=(CONFIG_SIGNATURE_CHECK=)
-          fi
-
           make -j"$(nproc)" "${make_args[@]}" 2>&1 | tee "${GITHUB_WORKSPACE}/diagnostics/build.log"
 
       - name: Collect diagnostics
@@ -229,17 +178,12 @@ jobs:
           rootfs_partsize=${{ steps.meta.outputs.rootfs_partsize }}
           package_file=${{ steps.meta.outputs.package_file }}
           build_base=${{ steps.meta.outputs.build_base }}
-          disable_signature_check=${{ steps.meta.outputs.disable_signature_check }}
           EOF
 
           find imagebuilder/bin/targets -maxdepth 3 -type f | sort > diagnostics/tree.txt || true
           cp -f "${{ steps.meta.outputs.package_file }}" diagnostics/packages.list
           cp -f config/build.conf diagnostics/build.conf
-
-          for repo_file in imagebuilder/repositories imagebuilder/repositories.orig; do
-            [ -f "$repo_file" ] || continue
-            cp -f "$repo_file" diagnostics/
-          done
+          [ -f imagebuilder/repositories ] && cp -f imagebuilder/repositories diagnostics/
 
       - if: always()
         uses: actions/upload-artifact@v4
@@ -302,7 +246,6 @@ jobs:
           - Image: ${{ steps.meta.outputs.fs }} ${{ steps.meta.outputs.image }}
           - Rootfs size: ${{ steps.meta.outputs.rootfs_partsize }} MB
           - Package list: ${{ steps.meta.outputs.package_file }}
-          - Signature check: ${{ steps.meta.outputs.disable_signature_check == 'true' && 'disabled' || 'enabled' }}
           EOF
 
           if gh release view "$tag" >/dev/null 2>&1; then

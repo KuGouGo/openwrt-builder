@@ -24,7 +24,7 @@ README.md
 
 ## Build flow
 
-1. Resolve OpenWrt version
+1. Fetch latest official OpenWrt release
 2. Load build settings from `config/build.conf`
 3. Download matching official ImageBuilder
 4. Copy `files/` into ImageBuilder
@@ -32,12 +32,11 @@ README.md
 6. Build image
 7. Upload diagnostics and release assets
 
-## Workflow inputs
+## Trigger
 
-- `openwrt_version`: build a specific official release, e.g. `24.10.0`
-- `rootfs_partsize`: override the default from `config/build.conf`
-- `package_file`: override the default from `config/build.conf`
-- `disable_signature_check`: only for unsigned/custom feeds
+Run `Actions -> build -> Run workflow`.
+
+This workflow has no manual inputs. Build behavior comes from `config/build.conf` and `config/packages.list`.
 
 ## Build config
 
