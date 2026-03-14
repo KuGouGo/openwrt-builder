@@ -75,8 +75,13 @@ jobs:
           set -euo pipefail
           ver="${{ steps.rel.outputs.ver }}"
           file="openwrt-imagebuilder-${ver}-${OPENWRT_TARGET}-${OPENWRT_SUBTARGET}.Linux-x86_64.tar.zst"
-          url="${MIRROR_BASE}/releases/${ver}/targets/${OPENWRT_TARGET}/${OPENWRT_SUBTARGET}/${file}"
-          curl --retry 3 --retry-all-errors --connect-timeout 20 --max-time 180 -fL "$url" -o ib.tar.zst
+          primary_url="${MIRROR_BASE}/releases/${ver}/targets/${OPENWRT_TARGET}/${OPENWRT_SUBTARGET}/${file}"
+          fallback_url="https://downloads.openwrt.org/releases/${ver}/targets/${OPENWRT_TARGET}/${OPENWRT_SUBTARGET}/${file}"
+          echo "Trying mirror   : $primary_url"
+          if ! curl --retry 3 --retry-all-errors --connect-timeout 20 --max-time 180 -fL "$primary_url" -o ib.tar.zst; then
+            echo "Mirror failed, fallback to official: $fallback_url"
+            curl --retry 3 --retry-all-errors --connect-timeout 20 --max-time 180 -fL "$fallback_url" -o ib.tar.zst
+          fi
           tar --zstd -xf ib.tar.zst
           mv openwrt-imagebuilder-* imagebuilder
 
