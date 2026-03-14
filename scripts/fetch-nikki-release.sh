@@ -6,23 +6,56 @@ NIKKI_DIR="$ROOT/files/tmp/nikki-feed"
 mkdir -p "$NIKKI_DIR"
 
 VER="${1:?openwrt version required}"
-REL_JSON="$(curl --retry 3 --retry-all-errors --connect-timeout 15 --max-time 60 -fsSL https://api.github.com/repos/nikkinikki-org/OpenWrt-nikki/releases/latest)"
-TAG="$(printf '%s' "$REL_JSON" | jq -r '.tag_name')"
-ASSET="nikki_x86_64-openwrt-${VER%.*}.tar.gz"
-URL="$(printf '%s' "$REL_JSON" | jq -r --arg name "$ASSET" '.assets[] | select(.name==$name) | .browser_download_url' | head -n 1)"
+ARCH="${2:-x86_64}"
 
-if [ -z "$URL" ] || [ "$URL" = "null" ]; then
-  echo "nikki release asset not found: $ASSET" >&2
-  exit 1
-fi
+case "$VER" in
+  24.10*) BRANCH="openwrt-24.10" ;;
+  25.12*) BRANCH="openwrt-25.12" ;;
+  *)
+    echo "unsupported Nikki branch for OpenWrt version: $VER" >&2
+    exit 1
+    ;;
+esac
 
+REPOSITORY_URL="https://nikkinikki.pages.dev"
+FEED_URL="$REPOSITORY_URL/$BRANCH/$ARCH/nikki"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
-curl --retry 3 --retry-all-errors --connect-timeout 20 --max-time 180 -fL "$URL" -o "$TMP/nikki.tar.gz"
 rm -rf "$NIKKI_DIR"/*
-tar -xzf "$TMP/nikki.tar.gz" -C "$NIKKI_DIR"
-rm -f "$NIKKI_DIR/packages.adb" "$NIKKI_DIR/index.json"
 
-echo "Fetched Nikki release: $TAG"
-echo "Asset: $ASSET"
+fetch() {
+  local url="$1"
+  local out="$2"
+  curl --retry 3 --retry-all-errors --connect-timeout 20 --max-time 180 -fL "$url" -o "$out"
+}
+
+echo "Fetching Nikki feed from: $FEED_URL"
+
+if fetch "$FEED_URL/packages.adb" "$TMP/packages.adb"; then
+  cp -f "$TMP/packages.adb" "$NIKKI_DIR/packages.adb"
+else
+  echo "failed to fetch Nikki packages.adb from $FEED_URL" >&2
+  exit 1
+fi
+
+index_html="$(curl --retry 3 --retry-all-errors --connect-timeout 20 --max-time 180 -fsSL "$FEED_URL/")"
+
+for pkg in nikki luci-app-nikki luci-i18n-nikki-zh-cn; do
+  match="$(printf '%s' "$index_html" \
+    | grep -oE ">${pkg}-[^<]+\\.apk<" \
+    | sed -e 's/^>//' -e 's/<$//' \
+    | sort -u \
+    | tail -n 1 || true)"
+
+  if [ -z "$match" ]; then
+    echo "package not found in Nikki feed: $pkg" >&2
+    exit 1
+  fi
+
+  fetch "$FEED_URL/$match" "$NIKKI_DIR/$match"
+done
+
+echo "Fetched Nikki feed branch: $BRANCH"
+echo "Fetched Nikki arch       : $ARCH"
+find "$NIKKI_DIR" -maxdepth 1 -type f | sort

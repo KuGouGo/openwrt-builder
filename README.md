@@ -7,7 +7,7 @@
 
 Build official OpenWrt x86_64 release images with a clean, release-based workflow. Supports Nikki feed integration for official release builds.
 
-The workflow follows the official Image Builder usage: custom packages are copied into `imagebuilder/packages/`, then Image Builder generates the local package index itself during `make image`.
+The workflow follows the official Image Builder usage: custom packages are copied into `imagebuilder/packages/`, then Image Builder generates the local package index itself during `make image`. Nikki packages are fetched from the upstream Nikki feed (`nikkinikki.pages.dev`) based on the matching OpenWrt branch and architecture.
 
 ## Usage
 

@@ -65,11 +65,11 @@ jobs:
           echo "Build source    : ${BUILD_BASE}"
           echo "Feeds source    : ${FEEDS_MIRROR_BASE}"
 
-      - name: Fetch Nikki release packages
+      - name: Fetch Nikki feed packages
         shell: bash
         run: |
           set -euo pipefail
-          ./scripts/fetch-nikki-release.sh "${{ steps.rel.outputs.ver }}"
+          ./scripts/fetch-nikki-release.sh "${{ steps.rel.outputs.ver }}" x86_64
           echo "--- files/tmp/nikki-feed ---"
           find files/tmp/nikki-feed -maxdepth 2 -type f | sort || true
 
