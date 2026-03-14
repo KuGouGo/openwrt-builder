@@ -7,6 +7,7 @@ mkdir -p "$NIKKI_DIR"
 
 VER="${1:?openwrt version required}"
 ARCH="${2:-x86_64}"
+PKGS="${3:-nikki luci-app-nikki luci-i18n-nikki-zh-cn}"
 
 case "$VER" in
   24.10*) BRANCH="openwrt-24.10" ;;
@@ -41,7 +42,7 @@ fi
 
 index_html="$(curl --retry 3 --retry-all-errors --connect-timeout 20 --max-time 180 -fsSL "$FEED_URL/")"
 
-for pkg in nikki luci-app-nikki luci-i18n-nikki-zh-cn; do
+for pkg in $PKGS; do
   match="$(printf '%s' "$index_html" \
     | grep -oE ">${pkg}-[^<]+\\.apk<" \
     | sed -e 's/^>//' -e 's/<$//' \
@@ -58,4 +59,5 @@ done
 
 echo "Fetched Nikki feed branch: $BRANCH"
 echo "Fetched Nikki arch       : $ARCH"
+echo "Fetched Nikki packages   : $PKGS"
 find "$NIKKI_DIR" -maxdepth 1 -type f | sort

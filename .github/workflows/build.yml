@@ -15,14 +15,14 @@ jobs:
     env:
       OPENWRT_TARGET: x86
       OPENWRT_SUBTARGET: 64
+      OPENWRT_ARCH: x86_64
       OPENWRT_PROFILE: generic
       OPENWRT_FS: squashfs
       OPENWRT_IMAGE: combined-efi.img.gz
       ROOTFS_PARTSIZE: 600
-      KERNEL_PARTSIZE: 32
       BUILD_BASE: https://downloads.openwrt.org
-      FEEDS_MIRROR_BASE: https://downloads.openwrt.org
       PACKAGES_FILE: cfg/pkgs.txt
+      NIKKI_PACKAGES: nikki luci-app-nikki luci-i18n-nikki-zh-cn
 
     steps:
       - name: Checkout
@@ -63,13 +63,13 @@ jobs:
           echo "Output          : openwrt-${ver}-${OPENWRT_TARGET}-${OPENWRT_SUBTARGET}-${OPENWRT_PROFILE}-${OPENWRT_FS}-${OPENWRT_IMAGE}"
           echo "Packages        : $pkg_count"
           echo "Build source    : ${BUILD_BASE}"
-          echo "Feeds source    : ${FEEDS_MIRROR_BASE}"
+          echo "Nikki arch      : ${OPENWRT_ARCH}"
 
       - name: Fetch Nikki feed packages
         shell: bash
         run: |
           set -euo pipefail
-          ./scripts/fetch-nikki-release.sh "${{ steps.rel.outputs.ver }}" x86_64
+          ./scripts/fetch-nikki-release.sh "${{ steps.rel.outputs.ver }}" "${OPENWRT_ARCH}" "${NIKKI_PACKAGES}"
           echo "--- files/tmp/nikki-feed ---"
           find files/tmp/nikki-feed -maxdepth 2 -type f | sort || true
 
@@ -104,6 +104,17 @@ jobs:
             scripts/tune.sh imagebuilder "$ver"
           fi
 
+      - name: Manifest preflight
+        shell: bash
+        run: |
+          set -euo pipefail
+          pkgs="$(grep -vE '^\s*($|#)' "${GITHUB_WORKSPACE}/${PACKAGES_FILE}" | tr '\n' ' ' | xargs)"
+          echo "Custom packages : $pkgs"
+          cd imagebuilder
+          make manifest \
+            PROFILE="${OPENWRT_PROFILE}" \
+            PACKAGES="$pkgs"
+
       - name: Build
         shell: bash
         run: |
@@ -115,8 +126,7 @@ jobs:
             PROFILE="${OPENWRT_PROFILE}" \
             PACKAGES="$pkgs" \
             FILES="files" \
-            ROOTFS_PARTSIZE="${ROOTFS_PARTSIZE}" \
-            KERNEL_PARTSIZE="${KERNEL_PARTSIZE}"
+            ROOTFS_PARTSIZE="${ROOTFS_PARTSIZE}"
 
       - name: Pick final image
         id: pick
