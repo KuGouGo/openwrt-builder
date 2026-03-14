@@ -54,7 +54,6 @@ jobs:
         run: |
           set -euo pipefail
           ver="${{ steps.rel.outputs.ver }}"
-          nikki_feed="${NIKKI_FEED_BASE}/openwrt-${ver%.*}/x86_64/nikki/packages.adb"
           pkg_count="$(grep -vE '^\s*($|#)' "${GITHUB_WORKSPACE}/${PACKAGES_FILE}" | wc -l | tr -d ' ')"
           echo "OpenWrt version : $ver"
           echo "Target          : ${OPENWRT_TARGET}/${OPENWRT_SUBTARGET}"
@@ -63,21 +62,12 @@ jobs:
           echo "Output          : openwrt-${ver}-${OPENWRT_TARGET}-${OPENWRT_SUBTARGET}-${OPENWRT_PROFILE}-${OPENWRT_FS}-${OPENWRT_IMAGE}"
           echo "Packages        : $pkg_count"
           echo "Mirror          : ${MIRROR_BASE}"
-          echo "Nikki feed      : $nikki_feed"
 
-      - name: Check nikki feed
+      - name: Fetch Nikki release packages
         shell: bash
         run: |
           set -euo pipefail
-          ver="${{ steps.rel.outputs.ver }}"
-          nikki_feed="${NIKKI_FEED_BASE}/openwrt-${ver%.*}/x86_64/nikki/packages.adb"
-          echo "Checking: $nikki_feed"
-          code="$(curl --retry 3 --retry-all-errors --connect-timeout 20 --max-time 60 -o /dev/null -s -w "%{http_code}" "$nikki_feed")"
-          echo "HTTP status: $code"
-          if [ "$code" != "200" ]; then
-            echo "nikki feed unavailable: $nikki_feed" >&2
-            exit 1
-          fi
+          ./scripts/fetch-nikki-release.sh "${{ steps.rel.outputs.ver }}"
 
       - name: Download imagebuilder
         shell: bash
