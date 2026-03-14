@@ -110,6 +110,11 @@ jobs:
           set -euo pipefail
           pkgs="$(grep -vE '^\s*($|#)' "${GITHUB_WORKSPACE}/${PACKAGES_FILE}" | tr '\n' ' ' | xargs)"
           cd imagebuilder
+          mkdir -p packages
+          if [ -d "${GITHUB_WORKSPACE}/files/tmp/nikki-feed" ]; then
+            find "${GITHUB_WORKSPACE}/files/tmp/nikki-feed" -maxdepth 1 -type f \( -name '*.apk' -o -name '*.ipk' -o -name 'packages.adb' -o -name 'index.json' \) -exec cp -f {} packages/ \;
+          fi
+          ls -lah packages || true
           make image \
             PROFILE="${OPENWRT_PROFILE}" \
             PACKAGES="$pkgs" \
