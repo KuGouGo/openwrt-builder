@@ -7,7 +7,11 @@ ethtool
 htop
 ip-full
 jq
+kmod-dummy
+kmod-inet-diag
 kmod-nft-queue
+kmod-nft-socket
+kmod-nft-tproxy
 kmod-sched-core
 kmod-tcp-bbr
 kmod-tun
@@ -15,12 +19,15 @@ libustream-openssl
 lsblk
 luci
 luci-app-firewall
+luci-app-nikki
 luci-app-package-manager
 luci-i18n-base-zh-cn
 luci-i18n-firewall-zh-cn
+luci-i18n-nikki-zh-cn
 luci-i18n-package-manager-zh-cn
 luci-mod-rpc
 nano
+nikki
 nftables-json
 openssh-sftp-server
 owut
@@ -28,6 +35,7 @@ pciutils
 sing-box
 usbutils
 wget-ssl
+yq
 zoneinfo-asia
 -apk-mbedtls
 -dnsmasq
