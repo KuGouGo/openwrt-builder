@@ -22,7 +22,7 @@ jobs:
       ROOTFS_PARTSIZE: 600
       BUILD_BASE: https://downloads.openwrt.org
       PACKAGES_FILE: cfg/pkgs.txt
-      NIKKI_PACKAGES: nikki luci-app-nikki luci-i18n-nikki-zh-cn
+      NIKKI_PACKAGES: ""  # Temporarily disabled - SNAPSHOT packages incompatible with stable releases
 
     steps:
       - name: Checkout
@@ -66,6 +66,7 @@ jobs:
           echo "Nikki arch      : ${OPENWRT_ARCH}"
 
       - name: Fetch Nikki feed packages
+        if: env.NIKKI_PACKAGES != ''
         shell: bash
         run: |
           set -euo pipefail
@@ -95,7 +96,9 @@ jobs:
             rsync -a --exclude 'tmp/' files/ imagebuilder/files/
           fi
           if [ -d files/tmp/nikki-feed ]; then
-            find files/tmp/nikki-feed -maxdepth 1 -type f \( -name '*.apk' -o -name '*.ipk' -o -name '*.adb' \) -exec cp -f {} imagebuilder/packages/ \;
+            # Copy only apk/ipk files, not packages.adb (signature issues)
+            # Let imagebuilder generate its own package index
+            find files/tmp/nikki-feed -maxdepth 1 -type f \( -name '*.apk' -o -name '*.ipk' \) -exec cp -f {} imagebuilder/packages/ \;
           fi
           echo "--- imagebuilder/packages ---"
           find imagebuilder/packages -maxdepth 1 -type f | sort || true
