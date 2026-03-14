@@ -2,9 +2,8 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-OUT_DIR="$ROOT/files/etc/apk/repositories.d"
 NIKKI_DIR="$ROOT/files/tmp/nikki-feed"
-mkdir -p "$OUT_DIR" "$NIKKI_DIR"
+mkdir -p "$NIKKI_DIR"
 
 VER="${1:?openwrt version required}"
 REL_JSON="$(curl --retry 3 --retry-all-errors --connect-timeout 15 --max-time 60 -fsSL https://api.github.com/repos/nikkinikki-org/OpenWrt-nikki/releases/latest)"
@@ -24,9 +23,6 @@ curl --retry 3 --retry-all-errors --connect-timeout 20 --max-time 180 -fL "$URL"
 rm -rf "$NIKKI_DIR"/*
 tar -xzf "$TMP/nikki.tar.gz" -C "$NIKKI_DIR"
 
-cat > "$OUT_DIR/customfeeds.list" <<FEED
-/tmp/nikki-feed/packages.adb
-FEED
 
 echo "Fetched Nikki release: $TAG"
 echo "Asset: $ASSET"
