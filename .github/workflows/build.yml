@@ -20,7 +20,8 @@ jobs:
       OPENWRT_IMAGE: combined-efi.img.gz
       ROOTFS_PARTSIZE: 600
       KERNEL_PARTSIZE: 32
-      MIRROR_BASE: https://mirrors.tuna.tsinghua.edu.cn/openwrt
+      BUILD_BASE: https://downloads.openwrt.org
+      FEEDS_MIRROR_BASE: https://mirrors.tuna.tsinghua.edu.cn/openwrt
       PACKAGES_FILE: cfg/pkgs.txt
 
     steps:
@@ -61,7 +62,8 @@ jobs:
           echo "Image           : ${OPENWRT_FS} ${OPENWRT_IMAGE}"
           echo "Output          : openwrt-${ver}-${OPENWRT_TARGET}-${OPENWRT_SUBTARGET}-${OPENWRT_PROFILE}-${OPENWRT_FS}-${OPENWRT_IMAGE}"
           echo "Packages        : $pkg_count"
-          echo "Mirror          : ${MIRROR_BASE}"
+          echo "Build source    : ${BUILD_BASE}"
+          echo "Feeds mirror    : ${FEEDS_MIRROR_BASE}"
 
       - name: Fetch Nikki release packages
         shell: bash
@@ -75,13 +77,9 @@ jobs:
           set -euo pipefail
           ver="${{ steps.rel.outputs.ver }}"
           file="openwrt-imagebuilder-${ver}-${OPENWRT_TARGET}-${OPENWRT_SUBTARGET}.Linux-x86_64.tar.zst"
-          primary_url="${MIRROR_BASE}/releases/${ver}/targets/${OPENWRT_TARGET}/${OPENWRT_SUBTARGET}/${file}"
-          fallback_url="https://downloads.openwrt.org/releases/${ver}/targets/${OPENWRT_TARGET}/${OPENWRT_SUBTARGET}/${file}"
-          echo "Trying mirror   : $primary_url"
-          if ! curl --retry 3 --retry-all-errors --connect-timeout 20 --max-time 180 -fL "$primary_url" -o ib.tar.zst; then
-            echo "Mirror failed, fallback to official: $fallback_url"
-            curl --retry 3 --retry-all-errors --connect-timeout 20 --max-time 180 -fL "$fallback_url" -o ib.tar.zst
-          fi
+          url="${BUILD_BASE}/releases/${ver}/targets/${OPENWRT_TARGET}/${OPENWRT_SUBTARGET}/${file}"
+          echo "Downloading imagebuilder: $url"
+          curl --retry 3 --retry-all-errors --connect-timeout 20 --max-time 180 -fL "$url" -o ib.tar.zst
           tar --zstd -xf ib.tar.zst
           mv openwrt-imagebuilder-* imagebuilder
 
@@ -96,11 +94,11 @@ jobs:
           fi
           mkdir -p imagebuilder/files/etc/apk/repositories.d
           printf '%s\n' \
-            "${MIRROR_BASE}/releases/${ver}/packages/x86_64/base" \
-            "${MIRROR_BASE}/releases/${ver}/packages/x86_64/luci" \
-            "${MIRROR_BASE}/releases/${ver}/packages/x86_64/packages" \
-            "${MIRROR_BASE}/releases/${ver}/packages/x86_64/routing" \
-            "${MIRROR_BASE}/releases/${ver}/packages/x86_64/telephony" \
+            "${FEEDS_MIRROR_BASE}/releases/${ver}/packages/x86_64/base" \
+            "${FEEDS_MIRROR_BASE}/releases/${ver}/packages/x86_64/luci" \
+            "${FEEDS_MIRROR_BASE}/releases/${ver}/packages/x86_64/packages" \
+            "${FEEDS_MIRROR_BASE}/releases/${ver}/packages/x86_64/routing" \
+            "${FEEDS_MIRROR_BASE}/releases/${ver}/packages/x86_64/telephony" \
             > imagebuilder/files/etc/apk/repositories.d/distfeeds.list
           if [ -x scripts/tune.sh ]; then
             scripts/tune.sh imagebuilder "$ver"
