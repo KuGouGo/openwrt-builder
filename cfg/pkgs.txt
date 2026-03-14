@@ -1,7 +1,5 @@
 apk-openssl
 bash
-block-mount
-mtd
 curl
 dnsmasq-full
 ethtool
